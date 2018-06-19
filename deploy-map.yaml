@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: "my-nginx-service"
+spec:
+  # if your cluster supports it, uncomment the following to automatically create
+  # an external load-balanced IP for the frontend service.
+  #type: LoadBalancer
+  type: NodePort
+  ports:
+  # the port that this service should serve on
+  - name: http
+    port: 80
+    targetPort: 80
+    nodePort: 30705
+  selector:
+    app: "my-nginx-selector"
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: "my-nginx-deployment"
+spec:
+  # this replicas value is default
+  # modify it according to your case
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: "my-nginx-selector"
+    spec:
+      containers:
+      - name: my-nginx
+        image: mycluster.icp:8500/demo/my-nginx:1.1
+        volumeMounts:
+        - name: nginx-var
+          mountPath: /var/www/html/
+        - name: nginx-testit
+          mountPath: /var/www/html/testit
+      volumes:
+      - name: nginx-var
+        configMap: 
+          name: nginx-html
+      - name: nginx-testit
+        configMap: 
+          name: nginx-html-testit

@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: "my-liberty-service"
+spec:
+  # if your cluster supports it, uncomment the following to automatically create
+  # an external load-balanced IP for the frontend service.
+  #type: LoadBalancer
+  type: NodePort
+  ports:
+  # the port that this service should serve on
+  - name: http
+    port: 9080
+    targetPort: 9080
+  selector:
+    app: "my-liberty-selector"
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: "my-liberty-deployment"
+spec:
+  # this replicas value is default
+  # modify it according to your case
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: "my-liberty-selector"
+    spec:
+      containers:
+      - name: my-liberty
+        image: mycluster.icp:8500/demo/my-liberty:1.0
+        env:
+          - name: MY_VAR
+            valueFrom:
+              configMapKeyRef:
+                name: my-liberty-envvars
+                key: MY_VAR
+          - name: MY_VAR2
+            valueFrom:
+              configMapKeyRef:
+                name: my-liberty-envvars
+                key: MY_VAR2
